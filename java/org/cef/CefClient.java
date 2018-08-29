@@ -408,14 +408,27 @@ public class CefClient extends CefClientHandler
         return alreadyHandled;
     }
 
-    @Override
-    public void onGotFocus(CefBrowser browser) {
-        if (browser == null) return;
+	private ThreadLocal<Boolean> hasBeenFocused = new ThreadLocal<>();
 
-        focusedBrowser_ = browser;
-        browser.setFocus(true);
-        if (focusHandler_ != null) focusHandler_.onGotFocus(browser);
-    }
+	@Override
+	public void onGotFocus(CefBrowser browser) {
+		if (browser == null)
+			return;
+		if (Boolean.TRUE.equals(hasBeenFocused.get())) {
+			return;
+		} else {
+			hasBeenFocused.set(true);
+		}
+
+		try {
+			focusedBrowser_ = browser;
+			browser.setFocus(true);
+			if (focusHandler_ != null)
+				focusHandler_.onGotFocus(browser);
+		} finally {
+			hasBeenFocused.set(false);
+		}
+	}
 
     // CefJSDialogHandler
 
