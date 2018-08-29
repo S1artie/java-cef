@@ -882,6 +882,11 @@ CefSettings GetJNISettings(JNIEnv* env, jobject obj) {
     CefString(&settings.resources_dir_path) = tmp;
     tmp.clear();
   }
+  if (GetJNIFieldString(env, cls, obj, "framework_dir_path", &tmp) &&
+      !tmp.empty()) {
+    CefString(&settings.framework_dir_path) = tmp;
+    tmp.clear();
+  }
   if (GetJNIFieldString(env, cls, obj, "locales_dir_path", &tmp) &&
       !tmp.empty()) {
     CefString(&settings.locales_dir_path) = tmp;
