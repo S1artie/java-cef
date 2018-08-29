@@ -171,6 +171,8 @@ public class CefSettings {
      * switch.
      */
     public String resources_dir_path = null;
+   
+    public String framework_dir_path = null;
 
     /**
      * The fully qualified path for the locales directory. If this value is empty
@@ -242,6 +244,7 @@ public class CefSettings {
         tmp.log_severity = log_severity;
         tmp.javascript_flags = javascript_flags;
         tmp.resources_dir_path = resources_dir_path;
+        tmp.framework_dir_path = framework_dir_path;
         tmp.locales_dir_path = locales_dir_path;
         tmp.pack_loading_disabled = pack_loading_disabled;
         tmp.remote_debugging_port = remote_debugging_port;
