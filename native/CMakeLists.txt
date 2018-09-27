@@ -231,7 +231,7 @@ if(OS_LINUX)
   add_executable(${JCEF_HELPER_TARGET} ${JCEF_HELPER_SRCS})
   SET_EXECUTABLE_TARGET_PROPERTIES(${JCEF_HELPER_TARGET})
   add_dependencies(${JCEF_HELPER_TARGET} libcef_dll_wrapper)
-  target_link_libraries(${JCEF_HELPER_TARGET} libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS})
+  target_link_libraries(${JCEF_HELPER_TARGET} libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS} -static-libgcc -static-libstdc++)
 
   # Set rpath so that libraries can be placed next to the executable.
   set_target_properties(${JCEF_HELPER_TARGET} PROPERTIES INSTALL_RPATH "$ORIGIN")
@@ -241,7 +241,7 @@ if(OS_LINUX)
   add_library(${JCEF_TARGET} SHARED ${JCEF_SRCS})
   SET_LIBRARY_TARGET_PROPERTIES(${JCEF_TARGET})
   add_dependencies(${JCEF_TARGET} libcef_dll_wrapper ${JCEF_HELPER_TARGET})
-  target_link_libraries(${JCEF_TARGET} libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS} ${JNI_LIBRARIES})
+  target_link_libraries(${JCEF_TARGET} libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS} ${JNI_LIBRARIES} -static-libgcc -static-libstdc++)
   target_include_directories(${JCEF_TARGET} PUBLIC ${JNI_INCLUDE_DIRS})
 
   # Compile flags specific to the JCEF library target.
