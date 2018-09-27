@@ -306,6 +306,15 @@ if(OS_MAC)
     ADD_LOGICAL_TARGET("cef_sandbox_lib" "${CEF_SANDBOX_LIB_DEBUG}" "${CEF_SANDBOX_LIB_RELEASE}")
   endif()
 
+  # GEBIT Customization: modify dyld path to load framework relative to jcef_helper
+  # location that is anticipated in later jcef bundle packaging situation
+  add_custom_command(
+    TARGET ${JCEF_HELPER_TARGET}
+    POST_BUILD
+    COMMAND install_name_tool -change "@rpath/Frameworks/Chromium Embedded Framework.framework/Chromium Embedded Framework" "@executable_path/../../../Chromium Embedded Framework.framework/Chromium Embedded Framework" "${JCEF_HELPER_APP}/Contents/MacOS/jcef Helper"
+    VERBATIM
+  )
+
   # JCEF library target.
   add_library(${JCEF_TARGET} SHARED ${JCEF_RESOURCES_SRCS} ${JCEF_SRCS})
   SET_EXECUTABLE_TARGET_PROPERTIES(${JCEF_TARGET})
