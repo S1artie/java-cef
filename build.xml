@@ -51,6 +51,9 @@
         <include name="tests/**"/>
       </fileset>
     </jar>
+    <jar destfile="${out.path}/jcef-sources.jar"
+         basedir="java"
+         includes="org/cef/**/*.java"/>
   </target>
     
   <target name="bundle" depends="jar">
