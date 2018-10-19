@@ -6,6 +6,7 @@ package org.cef.browser;
 
 import java.awt.Component;
 import java.awt.Point;
+import java.awt.image.BufferedImage;
 import java.util.Vector;
 
 import org.cef.CefClient;
@@ -368,4 +369,12 @@ public interface CefBrowser {
      * @param word replace selected word with this word.
      */
     public void replaceMisspelling(String word);
+    
+    /**
+     * Captures a screenshot-like image of the currently displayed content and returns it.
+     *
+     * @return the screenshot image
+     * @throws UnsupportedOperationException if not supported
+     */
+    public BufferedImage createScreenshot();
 }
