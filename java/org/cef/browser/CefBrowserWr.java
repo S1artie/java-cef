@@ -24,6 +24,7 @@ import java.awt.event.HierarchyEvent;
 import java.awt.event.HierarchyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
+import java.awt.image.BufferedImage;
 import java.util.Date;
 
 import javax.swing.JPanel;
@@ -397,5 +398,10 @@ class CefBrowserWr extends CefBrowser_N {
         }
 
         return false;
+    }
+    
+    @Override
+    public BufferedImage createScreenshot() {
+        throw new UnsupportedOperationException("Unsupported for windowed rendering");
     }
 }
