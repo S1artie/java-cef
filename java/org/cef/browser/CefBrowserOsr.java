@@ -4,6 +4,7 @@
 
 package org.cef.browser;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Graphics;
@@ -16,12 +17,16 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.awt.image.BufferedImage;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.nio.ByteBuffer;
 
 import com.jogamp.nativewindow.NativeSurface;
 import com.jogamp.opengl.awt.GLCanvas;
+import com.jogamp.opengl.util.GLBuffers;
+import com.jogamp.opengl.GL;
+import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.GLAutoDrawable;
 import com.jogamp.opengl.GLEventListener;
 import com.jogamp.opengl.GLProfile;
@@ -242,7 +247,7 @@ class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler {
         if(canvas_ == null || canvas_.getContext() == null) {
             return;
         }
-        
+
         canvas_.getContext().makeCurrent();
         renderer_.onPaint(canvas_.getGL().getGL2(), popup, dirtyRects, buffer, width, height);
         canvas_.getContext().release();
@@ -291,5 +296,104 @@ class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler {
             // OSR windows cannot be reparented after creation.
             setFocus(true);
         }
+    }
+
+    // ----------------------------------------------------------------------------------------------------------------
+	  // Image capture functionality
+    // This was originally placed in the bundle wrapping JCEF, but then moved to JCEF itself because that allows us
+    // to encapsulate JCEF and the JOGL libs into a bundle that only exports JCEF (and no JOGL classes).
+    // ----------------------------------------------------------------------------------------------------------------
+
+    @Override
+    public BufferedImage createScreenshot() {
+        int tempWidth = canvas_.getWidth();
+        int tempHeight = canvas_.getHeight();
+        BufferedImage tempScreenshot = new BufferedImage(tempWidth, tempHeight, BufferedImage.TYPE_INT_RGB);
+        Graphics tempGraphics = tempScreenshot.getGraphics();
+
+        // In order to grab a screenshot of the browser window, we need to get the OpenGL internals from the GLCanvas
+        // that displays the browser. Technically, this display component works by having Chromium render updated
+        // parts into a 2D texture that is the same size as the window. On systems with 3D acceleration, this can be
+        // done by directly copying stuff in the graphics card memory, which makes it fast. This texture is then
+        // rendered into the canvas by rendering a simple textured quad via OpenGL. Our screen-grabbing mechanism works
+        // by getting the texture ID from the renderers' internals and adding itself into the OpenGL rendering process:
+        // the next time that rendering occurs, we just grab the textures' pixel data from the graphics memory and
+        // store it as a BufferedImage, hence we get our perfect screenshot. To ensure rendering happens soon, we just
+        // request an immediate redraw of the canvas' contents, which then causes rendering.
+        GL2 tempGL = canvas_.getGL().getGL2();
+        int tempTextureId = renderer_.getTextureID();
+
+        // This mirrors the two ways in which CefRenderer may render images internally - either via a texture that is
+        // updated incrementally and rendered by graphics hardware, in which case we capture the data directly from
+        // the texture, or by directly writing pixels to the framebuffer, in which case we directly read those pixels
+        // back. The latter is the way chosen if there is no graphics rendering hardware detected.
+        // Both is done in the GLEventListener below, because we need a valid OpenGL context for both actions.
+        boolean tempUseReadPixels = (tempTextureId == 0);
+        final Object tempSyncObject = new Object();
+
+        canvas_.addGLEventListener(new GLEventListener() {
+
+            @Override
+            public void reshape(GLAutoDrawable aDrawable, int aArg1, int aArg2, int aArg3, int aArg4) {
+                // ignore
+            }
+
+            @Override
+            public void init(GLAutoDrawable aDrawable) {
+                // ignore
+            }
+
+            @Override
+            public void dispose(GLAutoDrawable aDrawable) {
+                // ignore
+            }
+
+            @Override
+            public void display(GLAutoDrawable aDrawable) {
+                ByteBuffer tempBuffer = GLBuffers.newDirectByteBuffer(tempWidth * tempHeight * 4);
+
+                if (tempUseReadPixels) {
+                    // If pixels are copied directly to the framebuffer, we also directly read them back. In this case
+                    // we have to swap the resulting image on the Y axis, as OpenGL framebuffers are top-to-bottom.
+                    // This flipping is done below, when drawing into the BufferedImage.
+                    tempGL.glReadPixels(0, 0, tempWidth, tempHeight, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, tempBuffer);
+                } else {
+                    tempGL.glEnable(GL.GL_TEXTURE_2D);
+                    tempGL.glBindTexture(GL.GL_TEXTURE_2D, tempTextureId);
+                    tempGL.glGetTexImage(GL.GL_TEXTURE_2D, 0, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, tempBuffer);
+                    tempGL.glDisable(GL.GL_TEXTURE_2D);
+                }
+
+                for (int tempY = 0; tempY < tempHeight; tempY++) {
+                    for (int tempX = 0; tempX < tempWidth; tempX++) {
+                        Color tempPixelColor = new Color((tempBuffer.get() & 0xff),
+                                (tempBuffer.get() & 0xff),
+                                (tempBuffer.get() & 0xff));
+                        tempBuffer.get(); // throw away the alpha part
+                        tempGraphics.setColor(tempPixelColor);
+                        tempGraphics.drawRect(tempX, tempUseReadPixels ? (tempHeight - tempY - 1) : tempY, 1, 1);
+                    }
+                }
+
+                synchronized (tempSyncObject) {
+                    tempSyncObject.notify();
+                    canvas_.removeGLEventListener(this);
+                }
+            }
+        });
+
+        // This repaint triggers a call to the listeners' display method above.
+        canvas_.repaint();
+        synchronized (tempSyncObject) {
+            try {
+                // Then we just have to wait until we're signalled by the listener being called
+                tempSyncObject.wait(2000);
+            } catch (InterruptedException exc) {
+                // ignored
+            }
+        }
+
+        // At this point in time, our screenshot image contains an actual shot of the browsers' internal texture
+        return tempScreenshot;
     }
 }
