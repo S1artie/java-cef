@@ -39,12 +39,11 @@ void LoadHandler::OnLoadStart(CefRefPtr<CefBrowser> browser,
   if (!env)
     return;
 
-  jobject jframe = GetJNIFrame(env, frame);
-
   jobject jtransitionType = NewJNITransitionType(env, transition_type);
   if (!jtransitionType)
     return;
 
+  jobject jframe = GetJNIFrame(env, frame);
   JNI_CALL_VOID_METHOD(env, jhandler_, "onLoadStart",
                        "(Lorg/cef/browser/CefBrowser;Lorg/cef/browser/"
                        "CefFrame;Lorg/cef/network/CefRequest$TransitionType;)V",
