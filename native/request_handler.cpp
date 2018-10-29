@@ -273,6 +273,7 @@ void RequestHandler::OnResourceLoadComplete(
   env->DeleteLocalRef(jframe);
   env->DeleteLocalRef(jrequest);
   env->DeleteLocalRef(jresponse);
+  env->DeleteLocalRef(jstatus);
 }
 
 bool RequestHandler::GetAuthCredentials(CefRefPtr<CefBrowser> browser,

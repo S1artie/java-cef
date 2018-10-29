@@ -74,6 +74,7 @@ bool JSDialogHandler::OnJSDialog(CefRefPtr<CefBrowser> browser,
   env->DeleteLocalRef(jorigin_url);
   env->DeleteLocalRef(jmessage_text);
   env->DeleteLocalRef(jdefault_prompt_text);
+  env->DeleteLocalRef(jboolRef);
   return (jresult != JNI_FALSE);
 }
 

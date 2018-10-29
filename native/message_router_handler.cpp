@@ -45,8 +45,6 @@ bool MessageRouterHandler::OnQuery(
                   Boolean, jresult, GetJNIBrowser(browser),
                   jframe, (jlong)query_id, jrequest,
                   (jboolean)persistent, query_callback);
-  // immediatelly manually release the java string - automatic GC won't occur
-  // before the current thread returned to Java (which might never happen!)
   env->DeleteLocalRef(jrequest);
   bool result = (jresult != JNI_FALSE);
   if (!result) {
