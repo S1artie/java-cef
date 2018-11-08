@@ -505,6 +505,14 @@ public class CefApp extends CefAppHandlerAdapter {
             }
         });
     }
+    
+    /**
+     * Performs the actual message loop work. This allows to implement an own replacement
+     * for the doMessageLoopWork() method above.
+     */
+    public void doMessageLoopWorkSynchronous() {
+      N_DoMessageLoopWork();	
+    }
 
     /**
      * On Linux this method must be called before ANY other call to Xlib from
