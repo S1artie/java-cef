@@ -79,11 +79,12 @@ RenderHandler::~RenderHandler() {
 
 bool RenderHandler::GetRootScreenRect(CefRefPtr<CefBrowser> browser,
                                       CefRect& rect) {
-  return GetViewRect(browser, rect);
+  GetViewRect(browser, rect);
+  return false;
 }
 
-bool RenderHandler::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
-  return GetViewRect(GetJNIBrowser(browser), rect);
+void RenderHandler::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
+  GetViewRect(GetJNIBrowser(browser), rect);
 }
 
 bool RenderHandler::GetScreenPoint(CefRefPtr<CefBrowser> browser,
