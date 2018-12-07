@@ -87,15 +87,26 @@ Java_org_cef_CefApp_N_1ClearSchemeHandlerFactories(JNIEnv*, jobject) {
   return CefClearSchemeHandlerFactories() ? JNI_TRUE : JNI_FALSE;
 }
 
-JNIEXPORT jboolean JNICALL Java_org_cef_CefApp_N_1Startup(JNIEnv*, jclass) {
+JNIEXPORT jboolean JNICALL Java_org_cef_CefApp_N_1Startup(JNIEnv* env,
+                                                          jclass,
+                                                          jstring jFrameworkPath) {
 #if defined(OS_LINUX)
   XInitThreads();
 #elif defined(OS_MACOSX)
   // Load the CEF framework library at runtime instead of linking directly
   // as required by the macOS sandbox implementation.
+  const char * frameworkPath = NULL;
+  if (jFrameworkPath != NULL) {
+    frameworkPath = env->GetStringUTFChars(jFrameworkPath, 0);
+  }
+
   scoped_ptr<CefScopedLibraryLoader> library_loader(new CefScopedLibraryLoader);
-  if (!library_loader->LoadInMain())
+  if (!library_loader->LoadInMain((char *)frameworkPath))
     return JNI_FALSE;
+
+  if (jFrameworkPath != NULL) {
+    env->ReleaseStringUTFChars(jFrameworkPath, frameworkPath);
+  }
 
   // The Context object has members that can't be initialized until after the
   // CEF framework is loaded.
