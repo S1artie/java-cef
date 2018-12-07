@@ -72,7 +72,7 @@ Java_org_cef_CefApp_N_1ClearSchemeHandlerFactories(JNIEnv*, jobject);
  * Method:    N_Startup
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_org_cef_CefApp_N_1Startup(JNIEnv*, jclass);
+JNIEXPORT jboolean JNICALL Java_org_cef_CefApp_N_1Startup(JNIEnv*, jclass, jstring);
 
 #ifdef __cplusplus
 }
