@@ -286,6 +286,16 @@ Java_org_cef_browser_CefBrowser_1N_N_1SetWindowVisibility(JNIEnv*,
 
 /*
  * Class:     org_cef_browser_CefBrowser_N
+ * Method:    N_SetRenderingBlocked
+ * Signature: (Z)V
+ */
+JNIEXPORT void JNICALL
+Java_org_cef_browser_CefBrowser_1N_N_1SetRenderingBlocked(JNIEnv*,
+                                                          jobject,
+                                                          jboolean);
+
+/*
+ * Class:     org_cef_browser_CefBrowser_N
  * Method:    N_GetZoomLevel
  * Signature: ()D
  */
