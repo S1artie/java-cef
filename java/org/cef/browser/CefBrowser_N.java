@@ -471,6 +471,15 @@ abstract class CefBrowser_N extends CefNativeAdapter implements CefBrowser {
     }
 
     @Override
+    public void setRenderingBlocked(boolean blocked) {
+        try {
+            N_SetRenderingBlocked(blocked);
+        } catch (UnsatisfiedLinkError ule) {
+            ule.printStackTrace();
+        }
+    }
+
+    @Override
     public double getZoomLevel() {
         try {
             return N_GetZoomLevel();
@@ -786,6 +795,7 @@ abstract class CefBrowser_N extends CefNativeAdapter implements CefBrowser {
     private final native void N_Close(boolean force);
     private final native void N_SetFocus(boolean enable);
     private final native void N_SetWindowVisibility(boolean visible);
+    private final native void N_SetRenderingBlocked(boolean blocked);
     private final native double N_GetZoomLevel();
     private final native void N_SetZoomLevel(double zoomLevel);
     private final native void N_RunFileDialog(FileDialogMode mode, String title,
