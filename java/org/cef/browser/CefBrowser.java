@@ -260,6 +260,13 @@ public interface CefBrowser {
     public void setWindowVisibility(boolean visible);
 
     /**
+     * Set whether the rendering pipeline should perform content rendering or
+     * whether it should be blocked.
+     * @param blocked
+     */
+    public void setRenderingBlocked(boolean blocked);
+
+    /**
      * Get the current zoom level. The default zoom level is 0.0.
      * @return The current zoom level.
      */
