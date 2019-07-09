@@ -518,12 +518,16 @@ public class CefApp extends CefAppHandlerAdapter {
      * specific startup initialization. On Linux this initializes Xlib multithreading and on
      * macOS this dynamically loads the CEF framework.
      */
-    public static final boolean startup() {
+    public static final boolean startup(String aFrameworkPath) {
         if (OS.isLinux() || OS.isMacintosh()) {
             // System.loadLibrary("jcef");
-            return N_Startup();
+            return N_Startup(aFrameworkPath);
         }
         return true;
+    }
+
+    public static final boolean startup() {
+        return startup(null);
     }
 
     /**
@@ -548,7 +552,7 @@ public class CefApp extends CefAppHandlerAdapter {
         return library_path;
     }
 
-    private final static native boolean N_Startup();
+    private final static native boolean N_Startup(String aFrameworkPath);
     private final native boolean N_PreInitialize();
     private final native boolean N_Initialize(
             String pathToJavaDLL, CefAppHandler appHandler, CefSettings settings);
