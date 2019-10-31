@@ -384,4 +384,11 @@ public interface CefBrowser {
      * @throws UnsupportedOperationException if not supported
      */
     public BufferedImage createScreenshot();
+    
+    /**
+     * Can be used by an application to correct for a non-1:1 virtual pixels to real pixels on HiDPI displays.
+     *
+     * @param aFactor the scaling factor
+     */
+    public void setHiDPIScalingFactor(double aFactor);
 }

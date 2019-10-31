@@ -204,6 +204,10 @@ class CefRenderer {
                 // Update just the dirty rectangles.
                 for (int i = 0; i < dirtyRects.length; ++i) {
                     Rectangle rect = dirtyRects[i];
+                    if (rect.width == 0 || rect.height == 0) {
+                        // This appears to be possible sometimes on window resizing. It crashes the process if not eliminated here!
+                        continue;
+                    }
                     gl2.glPixelStorei(gl2.GL_UNPACK_SKIP_PIXELS, rect.x);
                     gl2.glPixelStorei(gl2.GL_UNPACK_SKIP_ROWS, rect.y);
                     gl2.glTexSubImage2D(gl2.GL_TEXTURE_2D, 0, rect.x, rect.y, rect.width,
