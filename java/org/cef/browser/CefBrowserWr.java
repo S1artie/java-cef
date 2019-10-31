@@ -371,8 +371,30 @@ class CefBrowserWr extends CefBrowser_N {
         } else {
             synchronized (content_rect_) {
                 content_rect_ = component_.getBounds();
-                updateUI(clipping, content_rect_);
+                // HiDPI display scale correction support code
+                // This code depends on the application detecting the necessary HiDPI scaling correction factor and setting it via
+                // setHiDPIScalingFactor.
+                Rectangle contentRect = new Rectangle(content_rect_.x, 
+                                                      content_rect_.y,
+                                                      (int) (content_rect_.width * getHiDPIScalingFactor()),
+                                                      (int) (content_rect_.height * getHiDPIScalingFactor()));
+                Rectangle clippingRect = new Rectangle(clipping.x, 
+                                                       clipping.y,
+                                                       (int) (clipping.width * getHiDPIScalingFactor()),
+                                                       (int) (clipping.height * getHiDPIScalingFactor()));
+                updateUI(clippingRect, contentRect);
             }
+        }
+    }
+    
+    @Override
+    public void setHiDPIScalingFactor(double aFactor) {
+        super.setHiDPIScalingFactor(aFactor);
+
+        if (component_ != null) {
+            content_rect_ = component_.getBounds();
+            wasResized(content_rect_.width, content_rect_.height);
+            doUpdate();
         }
     }
 
