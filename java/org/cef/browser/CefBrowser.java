@@ -16,7 +16,9 @@ import org.cef.network.CefRequest;
 
 import java.awt.Component;
 import java.awt.Point;
+import java.awt.image.BufferedImage;
 import java.util.Vector;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Interface representing a browser.
@@ -357,4 +359,17 @@ public interface CefBrowser {
      * @param word replace selected word with this word.
      */
     public void replaceMisspelling(String word);
+
+    /**
+     * Captures a screenshot-like image of the currently displayed content and returns it.
+     * <p>
+     * If executed on the AWT Event Thread, this returns an immediately resolved {@link
+     * java.util.concurrent.CompletableFuture}. If executed from another thread, the {@link
+     * java.util.concurrent.CompletableFuture} returned is resolved as soon as the screenshot 
+     * has been taken (which must happen on the event thread).
+     *
+     * @return the screenshot image
+     * @throws UnsupportedOperationException if not supported
+     */
+    public CompletableFuture<BufferedImage> createScreenshot();
 }

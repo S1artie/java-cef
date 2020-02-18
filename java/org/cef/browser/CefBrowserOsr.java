@@ -5,12 +5,15 @@
 package org.cef.browser;
 
 import com.jogamp.nativewindow.NativeSurface;
+import com.jogamp.opengl.GL;
+import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.GLAutoDrawable;
 import com.jogamp.opengl.GLCapabilities;
 import com.jogamp.opengl.GLContext;
 import com.jogamp.opengl.GLEventListener;
 import com.jogamp.opengl.GLProfile;
 import com.jogamp.opengl.awt.GLCanvas;
+import com.jogamp.opengl.util.GLBuffers;
 
 import org.cef.CefClient;
 import org.cef.callback.CefDragData;
@@ -19,6 +22,7 @@ import org.cef.handler.CefRenderHandler;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.dnd.DropTarget;
@@ -31,7 +35,12 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.awt.image.BufferedImage;
 import java.nio.ByteBuffer;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import javax.swing.MenuSelectionManager;
 import javax.swing.SwingUtilities;
@@ -47,6 +56,7 @@ class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler {
     private long window_handle_ = 0;
     private Rectangle browser_rect_ = new Rectangle(0, 0, 1, 1); // Work around CEF issue #1437.
     private Point screenPoint_ = new Point(0, 0);
+    private double scaleFactor_ = 1.0;
     private boolean isTransparent_;
 
     CefBrowserOsr(CefClient client, String url, boolean transparent, CefRequestContext context) {
@@ -105,6 +115,9 @@ class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler {
             @Override
             public void paint(Graphics g) {
                 createBrowserIfRequired(true);
+                if (g instanceof Graphics2D) {
+                    scaleFactor_ = ((Graphics2D) g).getTransform().getScaleX();
+                }
                 super.paint(g);
             }
         };
@@ -304,6 +317,139 @@ class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler {
         } else {
             // OSR windows cannot be reparented after creation.
             setFocus(true);
+        }
+    }
+
+    @Override
+    public CompletableFuture<BufferedImage> createScreenshot() {
+        int width = (int) (canvas_.getWidth() * scaleFactor_);
+        int height = (int) (canvas_.getHeight() * scaleFactor_);
+        final BufferedImage screenshot =
+                new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+
+        // In order to grab a screenshot of the browser window, we need to get the OpenGL internals
+        // from the GLCanvas that displays the browser.
+        GL2 gl = canvas_.getGL().getGL2();
+        int textureId = renderer_.getTextureID();
+
+        // This mirrors the two ways in which CefRenderer may render images internally - either via
+        // an incrementally updated texture that is the same size as the window and simply rendered
+        // onto a textured quad by graphics hardware, in which case we capture the data directly
+        // from this texture, or by directly writing pixels into the OpenGL framebuffer, in which
+        // case we directly read those pixels back. The latter is the way chosen if there is no
+        // hardware rasterizer capability detected. We can simply distinguish both approaches by
+        // looking whether the textureId of the renderer is a valid (non-zero) one.
+        boolean useReadPixels = (textureId == 0);
+
+        // This Runnable encapsulates the pixel-reading code. After running it, the screenshot
+        // BufferedImage contains the grabbed image.
+        final Runnable pixelGrabberRunnable = new Runnable() {
+            @Override
+            public void run() {
+                ByteBuffer buffer = GLBuffers.newDirectByteBuffer(width * height * 4);
+
+                gl.getContext().makeCurrent();
+                try {
+                    if (useReadPixels) {
+                        // If pixels are copied directly to the framebuffer, we also directly read
+                        // them back.
+                        gl.glReadPixels(
+                                0, 0, width, height, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, buffer);
+                    } else {
+                        // In this case, read the texture pixel data from the previously-retrieved
+                        // texture ID
+                        gl.glEnable(GL.GL_TEXTURE_2D);
+                        gl.glBindTexture(GL.GL_TEXTURE_2D, textureId);
+                        gl.glGetTexImage(
+                                GL.GL_TEXTURE_2D, 0, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, buffer);
+                        gl.glDisable(GL.GL_TEXTURE_2D);
+                    }
+                } finally {
+                    gl.getContext().release();
+                }
+
+                for (int y = 0; y < height; y++) {
+                    for (int x = 0; x < width; x++) {
+                        // The OpenGL functions only support RGBA, while Java BufferedImage uses
+                        // ARGB. We must convert.
+                        int r = (buffer.get() & 0xff);
+                        int g = (buffer.get() & 0xff);
+                        int b = (buffer.get() & 0xff);
+                        int a = (buffer.get() & 0xff);
+                        int argb = (a << 24) | (r << 16) | (g << 8) | (b << 0);
+                        // If pixels were read from the framebuffer, we have to flip the resulting
+                        // image on the Y axis, as the OpenGL framebuffer's y axis starts at the
+                        // bottom of the image pointing "upwards", while BufferedImage has the
+                        // origin in the upper left corner. This flipping is done when drawing into
+                        // the BufferedImage.
+                        screenshot.setRGB(x, useReadPixels ? (height - y - 1) : y, argb);
+                    }
+                }
+            }
+        };
+
+        if (SwingUtilities.isEventDispatchThread()) {
+            // If called on the AWT event thread, just access the GL API directly
+            pixelGrabberRunnable.run();
+            return CompletableFuture.completedFuture(screenshot);
+        } else {
+            // If called from another thread, register a GLEventListener and trigger an async
+            // redraw, during which we use the GL API to grab the pixel data. An unresolved Future
+            // is returned, on which the caller can wait for a result (but not with the Event
+            // Thread, as we need that for pixel grabbing, which is why there's a safeguard in place
+            // to catch that situation if it accidentally happens).
+            CompletableFuture<BufferedImage> future = new CompletableFuture<BufferedImage>() {
+                private void safeguardGet() {
+                    if (SwingUtilities.isEventDispatchThread()) {
+                        throw new RuntimeException(
+                                "Waiting on this Future using the AWT Event Thread is illegal, "
+                                + "because it can potentially deadlock the thread.");
+                    }
+                }
+
+                @Override
+                public BufferedImage get() throws InterruptedException, ExecutionException {
+                    safeguardGet();
+                    return super.get();
+                }
+
+                @Override
+                public BufferedImage get(long timeout, TimeUnit unit)
+                        throws InterruptedException, ExecutionException, TimeoutException {
+                    safeguardGet();
+                    return super.get(timeout, unit);
+                }
+            };
+            canvas_.addGLEventListener(new GLEventListener() {
+                @Override
+                public void reshape(
+                        GLAutoDrawable aDrawable, int aArg1, int aArg2, int aArg3, int aArg4) {
+                    // ignore
+                }
+
+                @Override
+                public void init(GLAutoDrawable aDrawable) {
+                    // ignore
+                }
+
+                @Override
+                public void dispose(GLAutoDrawable aDrawable) {
+                    // ignore
+                }
+
+                @Override
+                public void display(GLAutoDrawable aDrawable) {
+                    canvas_.removeGLEventListener(this);
+                    pixelGrabberRunnable.run();
+                    future.complete(screenshot);
+                }
+            });
+
+            // This repaint triggers an indirect call to the listeners' display method above, which
+            // ultimately completes the future that we return immediately.
+            canvas_.repaint();
+
+            return future;
         }
     }
 }
