@@ -5,6 +5,7 @@
 package org.cef.browser;
 
 import org.cef.CefClient;
+import org.cef.OS;
 import org.cef.browser.CefRequestContext;
 import org.cef.callback.CefDragData;
 import org.cef.callback.CefNativeAdapter;
@@ -47,6 +48,7 @@ abstract class CefBrowser_N extends CefNativeAdapter implements CefBrowser {
     private CefBrowser_N devTools_ = null;
     private boolean closeAllowed_ = false;
     private boolean isClosed_ = false;
+    private double hidpi_scaling_factor_ = 1.0;
 
     protected CefBrowser_N(CefClient client, String url, CefRequestContext context,
             CefBrowser_N parent, Point inspectAt) {
@@ -565,13 +567,22 @@ abstract class CefBrowser_N extends CefNativeAdapter implements CefBrowser {
             ule.printStackTrace();
         }
     }
+    
+    @Override
+    public void setHiDPIScalingFactor(double aFactor) {
+        hidpi_scaling_factor_ = aFactor;
+    }
+    
+    public double getHiDPIScalingFactor() {
+        return hidpi_scaling_factor_;
+    }
 
     /**
      * Notify that the browser was resized.
      * @param width The new width of the browser
      * @param height The new height of the browser
      */
-    protected final void wasResized(int width, int height) {
+    protected final void wasResized(int width, int height) {    	
         try {
             N_WasResized(width, height);
         } catch (UnsatisfiedLinkError ule) {
