@@ -188,7 +188,7 @@ class CefBrowserWr extends CefBrowser_N {
             @Override
             public void setBounds(int x, int y, int width, int height) {
                 super.setBounds(x, y, width, height);
-                wasResized((int) (width * scaleFactor_), (int) (height * scaleFactor_));
+                wasResized((int) (width * getHiDPIScalingFactor()), (int) (height * getHiDPIScalingFactor()));
             }
 
             @Override
@@ -199,7 +199,7 @@ class CefBrowserWr extends CefBrowser_N {
             @Override
             public void setSize(int width, int height) {
                 super.setSize(width, height);
-                wasResized((int) (width * scaleFactor_), (int) (height * scaleFactor_));
+                wasResized((int) (width * getHiDPIScalingFactor()), (int) (height * getHiDPIScalingFactor()));
             }
 
             @Override
@@ -350,9 +350,9 @@ class CefBrowserWr extends CefBrowser_N {
         if (isClosed()) return;
 
         Rectangle vr = ((JPanel) component_).getVisibleRect();
-        Rectangle clipping = new Rectangle((int) (vr.getX() * scaleFactor_),
-                (int) (vr.getY() * scaleFactor_), (int) (vr.getWidth() * scaleFactor_),
-                (int) (vr.getHeight() * scaleFactor_));
+        Rectangle clipping = new Rectangle((int) (vr.getX() * getHiDPIScalingFactor()),
+                (int) (vr.getY() * getHiDPIScalingFactor()), (int) (vr.getWidth() * getHiDPIScalingFactor()),
+                (int) (vr.getHeight() * getHiDPIScalingFactor()));
 
         if (OS.isMacintosh()) {
             Container parent = component_.getParent();
@@ -378,12 +378,23 @@ class CefBrowserWr extends CefBrowser_N {
         } else {
             synchronized (content_rect_) {
                 Rectangle bounds = component_.getBounds();
-                content_rect_ = new Rectangle((int) (bounds.getX() * scaleFactor_),
-                        (int) (bounds.getY() * scaleFactor_),
-                        (int) (bounds.getWidth() * scaleFactor_),
-                        (int) (bounds.getHeight() * scaleFactor_));
+                content_rect_ = new Rectangle((int) (bounds.getX() * getHiDPIScalingFactor()),
+                        (int) (bounds.getY() * getHiDPIScalingFactor()),
+                        (int) (bounds.getWidth() * getHiDPIScalingFactor()),
+                        (int) (bounds.getHeight() * getHiDPIScalingFactor()));
                 updateUI(clipping, content_rect_);
             }
+        }
+    }
+    
+    @Override
+    public void setHiDPIScalingFactor(double aFactor) {
+        super.setHiDPIScalingFactor(aFactor);
+
+        if (component_ != null) {
+            content_rect_ = component_.getBounds();
+            wasResized(content_rect_.width, content_rect_.height);
+            doUpdate();
         }
     }
 
