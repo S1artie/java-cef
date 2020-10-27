@@ -197,7 +197,7 @@ if(NOT ${JNI_FOUND})
   message(FATAL_ERROR ${JAVA_FATAL_ERROR})
 endif()
 
-if(OS_MACOSX)
+if(OS_MAC)
   # OS X stores the Java binaries separately from the JNI includes/libraries.
   # Find the Java development installation.
   find_package(Java ${JDK_MIN_VERSION} COMPONENTS Development)
@@ -245,7 +245,7 @@ file(COPY "${CEF_ROOT}/README.txt" DESTINATION "${CMAKE_BINARY_DIR}")
 if(OS_WINDOWS)
   set(GS_PLATFORM "win32")
   set(GS_HASHPATH "win/clang-format.exe.sha1")
-elseif(OS_MACOSX)
+elseif(OS_MAC)
   set(GS_PLATFORM "darwin")
   set(GS_HASHPATH "mac/clang-format.sha1")
 elseif(OS_LINUX)
