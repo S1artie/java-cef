@@ -33,13 +33,13 @@ class BrowserProcessHandler : public CefBrowserProcessHandler {
   virtual ~BrowserProcessHandler();
 
   void OnContextInitialized() OVERRIDE;
-  void OnRenderProcessThreadCreated(
-      CefRefPtr<CefListValue> extra_info) OVERRIDE;
   CefRefPtr<CefPrintHandler> GetPrintHandler() OVERRIDE;
   void OnScheduleMessagePumpWork(int64 delay_ms) OVERRIDE;
 
   static void AddMessageRouterConfig(const CefMessageRouterConfig& cfg);
   static void RemoveMessageRouterConfig(const CefMessageRouterConfig& cfg);
+
+  static void GetRouterConfigs(CefRefPtr<CefListValue> extra_info);
 
  protected:
   ScopedJNIObjectGlobal handle_;

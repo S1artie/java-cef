@@ -38,7 +38,7 @@ void BrowserProcessHandler::OnContextInitialized() {
   JNI_CALL_VOID_METHOD(env, handle_, "onContextInitialized", "()V");
 }
 
-void BrowserProcessHandler::OnRenderProcessThreadCreated(
+void BrowserProcessHandler::GetRouterConfigs(
     CefRefPtr<CefListValue> extra_info) {
   int idx = 0;
   static std::set<CefMessageRouterConfig, cmpCfg>::iterator iter;

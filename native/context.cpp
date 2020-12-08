@@ -9,7 +9,7 @@
 #include "client_app.h"
 #include "jni_util.h"
 
-#if defined(OS_MACOSX)
+#if defined(OS_MAC)
 #include "util_mac.h"
 #endif
 
@@ -221,7 +221,7 @@ bool Context::Initialize(JNIEnv* env,
   BackupSignalHandlers();
 #endif
 
-#if defined(OS_MACOSX)
+#if defined(OS_MAC)
   res = util_mac::CefInitializeOnMainThread(main_args, settings,
                                             client_app.get());
 #else
@@ -243,7 +243,7 @@ void Context::OnContextInitialized() {
 void Context::DoMessageLoopWork() {
   DCHECK(thread_checker_.CalledOnValidThread());
 
-#if defined(OS_MACOSX)
+#if defined(OS_MAC)
   util_mac::CefDoMessageLoopWorkOnMainThread();
 #else
   CefDoMessageLoopWork();
@@ -257,7 +257,7 @@ void Context::Shutdown() {
   CefClearSchemeHandlerFactories();
 
   ClientApp::eraseTempFiles();
-#if defined(OS_MACOSX)
+#if defined(OS_MAC)
   util_mac::CefShutdownOnMainThread();
 #else
   // Pump CefDoMessageLoopWork a few times before shutting down.
@@ -276,7 +276,7 @@ Context::Context() : external_message_pump_(true) {
   DCHECK(!g_context);
   g_context = this;
 
-#if defined(OS_MACOSX)
+#if defined(OS_MAC)
   // On macOS we create this object very early to allow LibraryLoader
   // assignment. However, we still want the PreInitialize() call to determine
   // thread ownership.
@@ -288,7 +288,7 @@ Context::~Context() {
   DCHECK(thread_checker_.CalledOnValidThread());
   g_context = NULL;
 
-#if defined(OS_MACOSX)
+#if defined(OS_MAC)
   cef_unload_library();
 #endif
 }
