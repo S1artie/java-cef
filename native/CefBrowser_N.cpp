@@ -19,6 +19,7 @@
 #include "string_visitor.h"
 #include "temp_window.h"
 #include "window_handler.h"
+#include "browser_process_handler.h"
 
 #if defined(OS_LINUX)
 #define XK_3270  // for XK_3270_BackTab
@@ -1007,8 +1008,16 @@ void create(std::shared_ptr<JNIObjectsForCreate> objs,
     return;
   }
 
+  // Get Router configs
+  CefRefPtr<CefListValue> router_configs = CefListValue::Create();
+  BrowserProcessHandler::GetRouterConfigs(router_configs);
+  
+  // Give router config as extra_info
+  CefRefPtr<CefDictionaryValue> extra_info = CefDictionaryValue::Create();
+  extra_info->SetList("router_configs", router_configs);
+
   bool result = CefBrowserHost::CreateBrowser(windowInfo, clientHandler.get(),
-                                              strUrl, settings, NULL, context);
+                                              strUrl, settings, extra_info, context);
   if (!result) {
     lifeSpanHandler->unregisterJBrowser(globalRef);
     env->DeleteGlobalRef(globalRef);

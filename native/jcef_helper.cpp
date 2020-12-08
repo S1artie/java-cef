@@ -64,12 +64,16 @@ class CefHelperApp : public CefApp, public CefRenderProcessHandler {
     return this;
   }
 
-  virtual void OnBrowserCreated(CefRefPtr<CefBrowser> browser,
-                                CefRefPtr<CefDictionaryValue> extra_info) OVERRIDE {
-    // Create the renderer-side router for query handling.
-    CefMessageRouterConfig config;
-    config.js_query_function = extra_info->GetString("js_query_function");
-    config.js_cancel_function = extra_info->GetString("js_cancel_function");
+  void OnBrowserCreated(CefRefPtr<CefBrowser> browser,
+                         CefRefPtr<CefDictionaryValue> extra_info_) OVERRIDE {
+    CefRefPtr<CefListValue> extra_info = extra_info_->GetList("router_configs");
+
+    for (size_t idx = 0; idx < extra_info->GetSize(); idx++) {
+      CefRefPtr<CefDictionaryValue> dict = extra_info->GetDictionary((int)idx);
+      // Create the renderer-side router for query handling.
+      CefMessageRouterConfig config;
+      config.js_query_function = dict->GetString("js_query_function");
+      config.js_cancel_function = dict->GetString("js_cancel_function");
 
     CefRefPtr<CefMessageRouterRendererSide> router =
         CefMessageRouterRendererSide::Create(config);
