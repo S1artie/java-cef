@@ -297,6 +297,21 @@ public class CefClient extends CefClientHandler
     }
 
     @Override
+    public boolean onCursorChange(CefBrowser browser, int cursorIdentifer) {
+        if (browser != null) {
+            boolean handled = false;
+            if (displayHandler_ != null) {
+                handled = displayHandler_.onCursorChange(browser, cursorIdentifer);
+            }
+            if (!handled) {
+                CefRenderHandler renderHandler = browser.getRenderHandler();
+                if (renderHandler != null) return renderHandler.onCursorChange(browser, cursorIdentifer);
+            }
+        }
+        return false;
+    }
+
+    @Override
     public boolean onTooltip(CefBrowser browser, String text) {
         if (displayHandler_ != null && browser != null) {
             return displayHandler_.onTooltip(browser, text);
@@ -685,14 +700,6 @@ public class CefClient extends CefClientHandler
         CefRenderHandler realHandler = browser.getRenderHandler();
         if (realHandler != null)
             realHandler.onPaint(browser, popup, dirtyRects, buffer, width, height);
-    }
-
-    @Override
-    public void onCursorChange(CefBrowser browser, int cursorType) {
-        if (browser == null) return;
-
-        CefRenderHandler realHandler = browser.getRenderHandler();
-        if (realHandler != null) realHandler.onCursorChange(browser, cursorType);
     }
 
     @Override

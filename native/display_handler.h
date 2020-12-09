@@ -23,6 +23,10 @@ class DisplayHandler : public CefDisplayHandler {
                        const CefString& url) OVERRIDE;
   void OnTitleChange(CefRefPtr<CefBrowser> browser,
                      const CefString& title) OVERRIDE;
+  bool OnCursorChange(CefRefPtr<CefBrowser> browser,
+                      CefCursorHandle cursor,
+                      cef_cursor_type_t type,
+                      const CefCursorInfo& custom_cursor_info) OVERRIDE;
   bool OnTooltip(CefRefPtr<CefBrowser> browser, CefString& text) OVERRIDE;
   void OnStatusMessage(CefRefPtr<CefBrowser> browser,
                        const CefString& value) OVERRIDE;

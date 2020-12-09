@@ -17,10 +17,6 @@ import java.nio.ByteBuffer;
  * This class exists as convenience for creating handler objects.
  */
 public abstract class CefRenderHandlerAdapter implements CefRenderHandler {
-    @Override
-    public void onCursorChange(CefBrowser browser, int cursorIdentifer) {
-        return;
-    }
 
     @Override
     public Rectangle getViewRect(CefBrowser browser) {

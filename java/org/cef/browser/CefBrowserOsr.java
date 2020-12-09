@@ -18,6 +18,7 @@ import com.jogamp.opengl.util.GLBuffers;
 import org.cef.CefClient;
 import org.cef.OS;
 import org.cef.callback.CefDragData;
+import org.cef.handler.CefDisplayHandler;
 import org.cef.handler.CefRenderHandler;
 import org.cef.handler.CefScreenInfo;
 
@@ -370,12 +371,13 @@ class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler {
     }
 
     @Override
-    public void onCursorChange(CefBrowser browser, final int cursorType) {
+    public boolean onCursorChange(CefBrowser browser, final int cursorType) {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 canvas_.setCursor(new Cursor(cursorType));
             }
         });
+        return true;
     }
 
     @Override

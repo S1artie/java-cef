@@ -25,6 +25,11 @@ public abstract class CefDisplayHandlerAdapter implements CefDisplayHandler {
     }
 
     @Override
+    public boolean onCursorChange(CefBrowser browser, int cursorIdentifer) {
+        return false;
+    }
+
+    @Override
     public boolean onTooltip(CefBrowser browser, String text) {
         return false;
     }

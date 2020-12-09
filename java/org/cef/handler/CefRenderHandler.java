@@ -66,11 +66,17 @@ public interface CefRenderHandler {
             ByteBuffer buffer, int width, int height);
 
     /**
-     * Handle cursor changes.
+     * Handle cursor changes. This method is a duplicate of the one in CefDisplayHandler
+     * and it exists solely to allow CefBrowserOsr to implement cursor setting in
+     * off-screen rendering without having to attach a full-blown CefDisplayHandler
+     * instance to the CefClient in question (which would potentially collide with an
+     * application-provided CefDisplayHandler).
+     * 
      * @param browser The browser generating the event.
      * @param cursor The new cursor.
+     * @return true if the cursor change was handled or false for default handling
      */
-    public void onCursorChange(CefBrowser browser, int cursor);
+    public boolean onCursorChange(CefBrowser browser, int cursor);
 
     /**
      * Called when the user starts dragging content in the web view. Contextual

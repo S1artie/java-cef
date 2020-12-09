@@ -29,6 +29,14 @@ public interface CefDisplayHandler {
     public void onTitleChange(CefBrowser browser, String title);
 
     /**
+     * Handle cursor changes.
+     * @param browser The browser generating the event.
+     * @param cursor The new cursor.
+     * @return true if the cursor change was handled or false for default handling
+     */
+    public boolean onCursorChange(CefBrowser browser, int cursor);
+
+    /**
      * Called when the browser is about to display a tooltip.
      *
      * @param browser The browser generating the event.
