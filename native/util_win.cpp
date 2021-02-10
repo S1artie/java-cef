@@ -201,6 +201,18 @@ LRESULT CALLBACK MouseProc(int nCode, WPARAM wParam, LPARAM lParam) {
   if (nCode != HC_ACTION || lParam == NULL)
     return CallNextHookEx(NULL, nCode, wParam, lParam);
 
+  // GEBIT-specific hack: we are ignoring mouse move events here, because
+  // these create A LOT of events being forwarded to the Java window handler
+  // and thus cause a lot of thread associations with the JVM, which negatively
+  // impacts debugging performance. Research has shown that for some unknown
+  // reason, the OnMouseEvent handler method is only called on Windows and
+  // not on MacOS/Linux, which hints at these events likely being expendable
+  // for JCEF itself (they are definitely not needed for our specific
+  // application using JCEF). This change was implemented as part of POS-2897
+  // (Optimize (debugging) performance of nxt-chromium, particularly on Windows).
+  if (wParam == WM_MOUSEMOVE)
+    return CallNextHookEx(NULL, nCode, wParam, lParam);
+
   MOUSEHOOKSTRUCT* pStruct = (MOUSEHOOKSTRUCT*)lParam;
 
   // Find the CefBrowser associated with the current window hierarchy.
